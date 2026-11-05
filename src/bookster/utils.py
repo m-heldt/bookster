@@ -13,7 +13,7 @@ def get_metadata_values(metadata: BookMetadata, name: str) -> ValuedMetadataItem
     ]
 
 
-def _extract_isbn(isbn_candidate: str) -> ISBN:
+def _extract_isbn(isbn_candidate: str) -> ISBN | None:
     '''Extract and validate ISBN from a candidate.
 
     Args:
@@ -26,13 +26,13 @@ def _extract_isbn(isbn_candidate: str) -> ISBN:
     isbn_adapter = TypeAdapter(ISBN)
 
     candidate = re.sub(
-        pattern=r"^(urn:isbn:|isbn(-10|-13)?\s*:)\s*",
+        pattern=r"^(urn:isbn:|isbn(-?1[03])?\s*:)\s*",
         repl="",
         string=isbn_candidate,
         flags=re.IGNORECASE,
     )
 
-    candidate = re.sub(pattern=r"[\s-]", repl="", string=candidate)
+    candidate = re.sub(pattern=r"[\s-]", repl="", string=candidate).upper()
 
     try:
         return isbn_adapter.validate_python(candidate)
@@ -40,7 +40,7 @@ def _extract_isbn(isbn_candidate: str) -> ISBN:
         return None
 
 
-def get_isbn(metadata: BookMetadata) -> ISBN:
+def get_isbn(metadata: BookMetadata) -> ISBN | None:
     isbn_candidates = get_metadata_values(metadata, "identifier")
 
     for candidate in isbn_candidates:

@@ -88,20 +88,14 @@ def test_extract_isbn_accepts_isbn10_with_x_check_digit():
     assert _extract_isbn("0-8044-2957-X") == "9780804429573"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Lowercase 'x' check digit is rejected; _extract_isbn does not upper-case it",
-)
 def test_extract_isbn_accepts_lowercase_x_check_digit():
     assert _extract_isbn("080442957x") == "9780804429573"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Prefix regex only matches 'isbn-13:', not the unhyphenated 'isbn13:'",
-)
-def test_extract_isbn_strips_unhyphenated_isbn13_prefix():
-    assert _extract_isbn(f"isbn13:{ISBN13}") == ISBN13
+@pytest.mark.parametrize("prefix", ["isbn13:", "ISBN10:", "isbn13 :"])
+def test_extract_isbn_strips_unhyphenated_prefix(prefix):
+    isbn = ISBN10 if "10" in prefix else ISBN13
+    assert _extract_isbn(f"{prefix}{isbn}") == ISBN13
 
 
 @pytest.mark.parametrize(
