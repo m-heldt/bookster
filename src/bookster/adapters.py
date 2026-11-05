@@ -1,6 +1,6 @@
 from typing import Protocol
 from pathlib import Path
-from .data import BookMetadata
+from .data import BookMetadata, Person
 from epublib import EPUB
 from .utils import get_metadata_values, get_isbn
 
@@ -19,9 +19,13 @@ class EPUBAdapter():
         with EPUB(path) as book:
             metadata = BookMetadata(
                 title=book.metadata.get_value("title"),
-                authors=book.metadata.get_value("creator"),
+                contributors=[
+                    Person(name=name)
+                    for name in get_metadata_values(book.metadata, "creator")
+                    if name.strip()
+                ],
                 publisher=book.metadata.get_value("publisher"),
-                languages=book.metadata.get_value("language"),
+                languages=get_metadata_values(book.metadata, "language"),
                 isbn=get_isbn(book.metadata),
                 description=book.metadata.get_value("description"),
                 subjects=get_metadata_values(book.metadata, "subject")
