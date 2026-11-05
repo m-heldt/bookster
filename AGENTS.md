@@ -33,8 +33,10 @@ src/bookster/          # package (src layout, built with uv_build)
   main.py              # Typer app: `inspect`, `metadata` commands; the `bookster` script
   adapters.py          # MetadataAdapter Protocol + EPUBAdapter, PDFAdapter
   data.py              # pydantic BookMetadata model, Book class
-  utils.py             # EPUB metadata helpers: get_metadata_values, get_isbn, _extract_isbn
+  isbn.py              # parse_isbn: format-agnostic ISBN extraction and validation
+  utils.py             # EPUB metadata helpers: get_metadata_values, get_isbn
 tests/
+  test_isbn.py         # pytest tests for isbn.py
   test_utils.py        # pytest tests for utils.py
 .agents/skills/, .claude/skills/   # agent skills (see "Agent skills" below)
 ebooks/                # sample books, gitignored, main checkout only
@@ -75,12 +77,16 @@ existing files wholesale, unless asked.
 - **`EPUBAdapter`** uses `epublib.EPUB` as a context manager and reads Dublin
   Core values via `book.metadata.get_value(...)`; repeated fields like `subject`
   go through `utils.get_metadata_values`.
+- **`isbn.py`** is format-agnostic: `parse_isbn` takes any string (EPUB
+  identifier, PDF metadata, provider data), strips `urn:isbn:`, `isbn:`,
+  `isbn-13:`, `isbn13:` style prefixes (case-insensitive), spaces and hyphens,
+  uppercases a trailing `x`, and validates with pydantic's `ISBN` type, which
+  converts ISBN-10 to ISBN-13. It returns an `ISBN` instance, or `None` for
+  anything invalid instead of raising. Pydantic's validator returns a plain
+  `str`, so `parse_isbn` wraps the validated value in `ISBN(...)`; callers
+  don't need to wrap it again.
 - **`utils.py`** works on epublib's metadata objects. `get_isbn` scans every
-  `identifier` item and returns the first one that `_extract_isbn` can validate.
-  `_extract_isbn` strips `urn:isbn:`, `isbn:`, `isbn-13:`, `isbn13:` style
-  prefixes (case-insensitive), spaces and hyphens, uppercases a trailing `x`,
-  and validates with pydantic's `ISBN` type, which converts ISBN-10 to ISBN-13.
-  It returns `None` for anything invalid instead of raising.
+  `identifier` item and returns the first one that `parse_isbn` can validate.
 - **CLI** (`main.py`) is a plain `typer.Typer()` app. `inspect` currently always
   uses `EPUBAdapter` regardless of file extension.
 
@@ -96,7 +102,7 @@ module needs both.
 ## Conventions
 
 - Type hints everywhere, using `X | None` and builtin generics (`list[str]`).
-- Docstrings in Google style (`Args:` / `Returns:`), as in `_extract_isbn`.
+- Docstrings in Google style (`Args:` / `Returns:`), as in `parse_isbn`.
 - Prefix module-private helpers with `_`.
 - Parsing helpers return `None` on bad input rather than raising, so one
   malformed identifier doesn't stop a book from loading.
