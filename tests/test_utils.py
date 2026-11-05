@@ -1,8 +1,9 @@
 import bs4
 import pytest
 from epublib.package.metadata import BookMetadata, GenericMetadataItem
+from pydantic_extra_types.isbn import ISBN
 
-from bookster.utils import _extract_isbn, get_isbn, get_metadata_values
+from bookster.utils import get_isbn, get_metadata_values
 
 # ISBN-13 / ISBN-10 pair for the same book, both with valid check digits.
 ISBN13 = "9780306406157"
@@ -50,69 +51,6 @@ def test_get_metadata_values_missing_name_returns_empty_list(metadata):
     assert get_metadata_values(metadata, "identifier") == []
 
 
-# --- _extract_isbn ----------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "candidate",
-    [
-        ISBN13,
-        f"urn:isbn:{ISBN13}",
-        f"URN:ISBN:{ISBN13}",
-        "urn:isbn:978-0-306-40615-7",
-        f"urn:isbn: {ISBN13}",
-        f"isbn:{ISBN13}",
-        f"ISBN: {ISBN13}",
-        f"ISBN-13:{ISBN13}",
-        "ISBN-13 : 978 0 306 40615 7",
-        "978 0 306 40615 7",
-    ],
-)
-def test_extract_isbn_strips_prefixes_and_separators(candidate):
-    assert _extract_isbn(candidate) == ISBN13
-
-
-@pytest.mark.parametrize(
-    "candidate",
-    [
-        ISBN10,
-        f"urn:isbn:{ISBN10}",
-        "ISBN-10: 0-306-40615-2",
-    ],
-)
-def test_extract_isbn_converts_isbn10_to_isbn13(candidate):
-    assert _extract_isbn(candidate) == ISBN13
-
-
-def test_extract_isbn_accepts_isbn10_with_x_check_digit():
-    assert _extract_isbn("0-8044-2957-X") == "9780804429573"
-
-
-def test_extract_isbn_accepts_lowercase_x_check_digit():
-    assert _extract_isbn("080442957x") == "9780804429573"
-
-
-@pytest.mark.parametrize("prefix", ["isbn13:", "ISBN10:", "isbn13 :"])
-def test_extract_isbn_strips_unhyphenated_prefix(prefix):
-    isbn = ISBN10 if "10" in prefix else ISBN13
-    assert _extract_isbn(f"{prefix}{isbn}") == ISBN13
-
-
-@pytest.mark.parametrize(
-    "candidate",
-    [
-        "",
-        "urn:uuid:12345678-1234-1234-1234-123456789abc",
-        "9780306406158",  # wrong check digit
-        "0306406153",  # wrong ISBN-10 check digit
-        "97803064061",  # too short
-        "not an isbn",
-    ],
-)
-def test_extract_isbn_returns_none_for_invalid(candidate):
-    assert _extract_isbn(candidate) is None
-
-
 # --- get_isbn ---------------------------------------------------------------
 
 
@@ -147,3 +85,9 @@ def test_get_isbn_ignores_isbn_under_other_names(metadata):
     metadata.add_dc("source", f"urn:isbn:{ISBN13}")
 
     assert get_isbn(metadata) is None
+
+
+def test_get_isbn_returns_isbn_instance(metadata):
+    metadata.add_dc("identifier", f"urn:isbn:{ISBN13}")
+
+    assert isinstance(get_isbn(metadata), ISBN)
