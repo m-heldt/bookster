@@ -17,7 +17,8 @@ The project is early. What works today:
 
 Stubs, not yet implemented: `EPUBAdapter.write_metadata`, all of `PDFAdapter`
 (`read_metadata` returns an empty `BookMetadata`), the `metadata` CLI command
-(only prints the filename), and the `Book` class in `data.py` (unused).
+(only prints the filename). `Book`, `Category` and `Taxonomy` in `data.py` are
+implemented and tested but not used by the CLI yet.
 
 Several dependencies in `pyproject.toml` are declared for planned work and are
 not imported anywhere yet: `openai`, `arize-phoenix-otel`,
@@ -32,11 +33,12 @@ src/bookster/          # package (src layout, built with uv_build)
   __init__.py          # empty
   main.py              # Typer app: `inspect`, `metadata` commands; the `bookster` script
   adapters.py          # MetadataAdapter Protocol + EPUBAdapter, PDFAdapter
-  data.py              # pydantic BookMetadata model, Book class
+  data.py              # pydantic models: Role, Person, BookMetadata, Category, Taxonomy, Book
   isbn.py              # parse_isbn: format-agnostic ISBN extraction and validation
   utils.py             # EPUB metadata helpers: get_metadata_values, get_isbn
 tests/
   test_isbn.py         # pytest tests for isbn.py
+  test_data.py         # pytest tests for data.py
   test_utils.py        # pytest tests for utils.py
 .agents/skills/, .claude/skills/   # agent skills (see "Agent skills" below)
 ebooks/                # sample books, gitignored, main checkout only
@@ -65,10 +67,27 @@ existing files wholesale, unless asked.
 ## Architecture
 
 - **`BookMetadata`** (`data.py`) is the format-independent model every adapter
-  reads into and writes from. It is a pydantic `BaseModel` with all fields
-  optional: `title`, `authors`, `publisher`, `languages`, `isbn`
-  (`pydantic_extra_types.isbn.ISBN`), `description`, `subjects`
-  (a list, default empty). `authors` and `languages` are single strings for now.
+  reads into and writes from. All fields are optional: `title`, `contributors`
+  (ordered `list[Person]`), `publisher`, `year`, `languages`, `isbn`
+  (`ISBN`, with no `str` fallback), `series`, `series_index`, `original_title`,
+  `original_language`, `description` and `subjects`. `authors` and `translators`
+  are read-only views over `contributors`. It strips strings, turns blank strings
+  into `None`, drops blank and duplicate list items, validates on assignment, and
+  forbids unknown fields. `year` is the first publication of this edition; for a
+  translation, the year of the original-language edition.
+- **`Person`** (frozen) has `name`, optional `family_name` and `given_names`, a
+  `role` and a computed `sort_name`. **`Role`** is a `StrEnum` of MARC relator
+  codes (`aut`, `trl`, ...), and an unknown code maps to `Role.OTHER`.
+- **`Category`** (frozen) is a folder in the library tree, stored as
+  `parts: tuple[str, ...]`. Parts are NFC-normalized. Unsafe folder names (leading
+  or trailing whitespace, a trailing dot, characters exFAT forbids) are rejected,
+  never stripped, so they keep matching the folders synced from Google Drive.
+- **`Taxonomy`** is the set of valid categories, loaded from `bookster.toml`
+  (`[categories]` maps leaf paths to optional descriptions; `other` and `exclude`
+  are optional). Books live only in leaves. `options` adds an implied `Other`
+  under every parent and at the top, and removes excluded subtrees.
+- **`Book`** holds `path`, `metadata` and an optional `category`; `format` is the
+  lowercase file extension.
 - **`MetadataAdapter`** (`adapters.py`) is a `typing.Protocol` with
   `read_metadata(path) -> BookMetadata` and `write_metadata(path, metadata) -> None`.
   Each file format gets one adapter class that satisfies it structurally (no
