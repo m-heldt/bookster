@@ -1,11 +1,10 @@
-from epublib import EPUB
 from epublib.package.metadata import ValuedMetadataItem, BookMetadata
 from pydantic_extra_types.isbn import ISBN
 
 from .isbn import parse_isbn
 
 
-def get_metadata_values(metadata: BookMetadata, name: str) -> ValuedMetadataItem:
+def get_metadata_values(metadata: BookMetadata, name: str) -> list[str]:
     return [
         item.value
         for item in metadata.items
@@ -14,9 +13,16 @@ def get_metadata_values(metadata: BookMetadata, name: str) -> ValuedMetadataItem
 
 
 def get_isbn(metadata: BookMetadata) -> ISBN | None:
-    isbn_candidates = get_metadata_values(metadata, "identifier")
+    """Return the first valid ISBN among the EPUB's identifiers.
 
-    for candidate in isbn_candidates:
-        candidate = parse_isbn(candidate)
-        if candidate != None:
-            return ISBN(candidate)
+    Args:
+        metadata: The EPUB's OPF metadata block.
+
+    Returns:
+        The first identifier that parses as an ISBN, normalized to ISBN-13,
+        or None if there is none.
+    """
+    for identifier in get_metadata_values(metadata, "identifier"):
+        if (isbn := parse_isbn(identifier)) is not None:
+            return isbn
+    return None
