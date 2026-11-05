@@ -29,8 +29,8 @@ before adding a new dependency.
 
 ```
 src/bookster/          # package (src layout, built with uv_build)
-  __init__.py          # main(): placeholder for the `bookster` script entry point
-  main.py              # Typer app: `inspect`, `metadata` commands
+  __init__.py          # empty
+  main.py              # Typer app: `inspect`, `metadata` commands; the `bookster` script
   adapters.py          # MetadataAdapter Protocol + EPUBAdapter, PDFAdapter
   data.py              # pydantic BookMetadata model, Book class
   utils.py             # EPUB metadata helpers: get_metadata_values, get_isbn, _extract_isbn
@@ -50,14 +50,12 @@ uv sync                                         # install deps, including the de
 uv run pytest                                   # run the test suite
 uv run pytest --cov=bookster                    # with coverage (pytest-cov)
 uv run pytest tests/test_utils.py -k isbn       # a subset
-uv run python -m bookster.main --help           # the CLI
-uv run python -m bookster.main inspect path/to/book.epub
+uv run bookster --help                          # the CLI
+uv run bookster inspect path/to/book.epub
 ```
 
-Note: the `bookster` console script in `pyproject.toml` points at
-`bookster:main`, which is still the placeholder in `__init__.py` and only prints
-"Hello from bookster!". The real CLI is the Typer `app` in `bookster/main.py`,
-so use `python -m bookster.main` until the entry point is rewired.
+The `bookster` console script points at the Typer `app` in `bookster/main.py`
+(`[project.scripts]` in `pyproject.toml`). New commands go on that `app`.
 
 No linter, formatter or type checker is configured. Don't add one, or reformat
 existing files wholesale, unless asked.
