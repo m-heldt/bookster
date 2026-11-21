@@ -1,18 +1,28 @@
-from typing import Protocol
+from abc import ABC, abstractmethod
+from typing import override, final
 from pathlib import Path
-from .data import BookMetadata, Person
+from .data import Book, BookMetadata, Person
 from epublib import EPUB
 from .utils import get_metadata_values, get_isbn
 
-class MetadataAdapter(Protocol):
+class BookAdapter(ABC):
+    @final
+    def load_book(self, path: Path) -> Book:
+        metadata = self.read_metadata(path)
+        return Book(path=path, metadata=metadata)
+
+    
+    @abstractmethod
     def read_metadata(self, path: Path) -> BookMetadata:
         ...
 
+    @abstractmethod
     def write_metadata(self, path: Path, metadata: BookMetadata) -> None:
         ...
 
 
-class EPUBAdapter():
+class EPUBAdapter(BookAdapter):
+    @override
     def read_metadata(self, path: Path) -> BookMetadata:
         '''Reads EPUB metadata
         '''
@@ -32,13 +42,16 @@ class EPUBAdapter():
             )
         return metadata
 
+    @override
     def write_metadata(self, path: Path, metadata: BookMetadata) -> None:
         ...
 
 
-class PDFAdapter():
+class PDFAdapter(BookAdapter):
+    @override
     def read_metadata(self, path: Path) -> BookMetadata:
         return BookMetadata()
 
+    @override
     def write_metadata(self, path: Path, metadata: BookMetadata) -> None:
         ...

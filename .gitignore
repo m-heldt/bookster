@@ -9,10 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
-# Sample books
-ebooks
 
+# helpful for dev
+artifacts
 notebooks
+ebooks
 
 # secret env
 .envrc
