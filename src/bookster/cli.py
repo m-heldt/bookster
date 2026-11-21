@@ -81,10 +81,6 @@ def inspect(book_path: Path, ui_language: Literal["en", "pl"] = "en") -> None:
     console.print(table)
 
 
-@app.command()
-def metadata(filename: Path):
-    print(filename)
-
 
 if __name__ == "__main__":
     app()
