@@ -4,7 +4,7 @@ import unicodedata
 from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Self, Annotated
 
 from pydantic import (
     BaseModel,
@@ -92,8 +92,8 @@ class BookMetadata(BaseModel):
     series_index: float | None = Field(default=None, ge=0)
     original_title: str | None = None
     original_language: str | None = None
-    description: str | None = None
     subjects: list[str] = Field(default_factory=list)
+    description: str | None = None
 
     @field_validator(*_OPTIONAL_STR_FIELDS, mode="before")
     @classmethod
