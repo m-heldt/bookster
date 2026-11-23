@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Mateusz Heldt", email = "23269740+m-heldt@users.noreply.github.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "arize-phoenix-otel>=0.17.2",
     "epublib>=0.1.7",
