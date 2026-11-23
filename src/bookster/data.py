@@ -5,6 +5,7 @@ from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Self, Annotated
+import hashlib
 
 from pydantic import (
     BaseModel,
@@ -304,6 +305,11 @@ class Book(BaseModel):
     path: Path
     metadata: BookMetadata = Field(default_factory=BookMetadata)
     category: Category | None = None
+
+    @property
+    def file_hash(self) -> str:
+        with open(self.path, "rb") as file:
+            return hashlib.file_digest(file, "sha1").hexdigest()
 
     @property
     def format(self) -> str:
