@@ -90,7 +90,7 @@ def inspect(book_path: Path, ui_language: Literal["en", "pl"] = "en") -> None:
 
 
 @metadata_app.command(
-    name="import", help="Import user-edited metadata from ReadEra backup file"
+    name="import", help="Import user-edited metadata from ReadEra backup file."
 )
 def metadata_import(backup_path: Path, force: bool = False) -> None:
     BATCH_SIZE = 500
@@ -104,8 +104,6 @@ def metadata_import(backup_path: Path, force: bool = False) -> None:
         rprint("Exiting now...")
         raise typer.Exit(0)
 
-
-
     engine = create_engine(f"sqlite:///{DB_PATH}")
 
     SQLModel.metadata.create_all(engine)
@@ -115,10 +113,7 @@ def metadata_import(backup_path: Path, force: bool = False) -> None:
         batch = []
         processed = 0
         with Progress() as progress:
-            task = progress.add_task(
-                "Importing metadata from Readera...",
-                total=None
-            )
+            task = progress.add_task("Importing metadata from Readera...", total=None)
             for record in readera_records:
                 batch.append(ReadEraBackup(**record))
                 if len(batch) == BATCH_SIZE:
@@ -133,6 +128,7 @@ def metadata_import(backup_path: Path, force: bool = False) -> None:
             rprint(f"{processed} records were imported.")
 
         raise typer.Exit(0)
+
 
 
 if __name__ == "__main__":
