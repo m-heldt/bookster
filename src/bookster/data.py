@@ -69,9 +69,6 @@ _OPTIONAL_STR_FIELDS = (
     "title",
     "publisher",
     "isbn",
-    "series",
-    "original_title",
-    "original_language",
     "description",
 )
 
@@ -89,10 +86,6 @@ class BookMetadata(BaseModel):
     year: int | None = None
     languages: list[str] = Field(default_factory=list)
     isbn: ISBN | None = None
-    series: str | None = None
-    series_index: float | None = Field(default=None, ge=0)
-    original_title: str | None = None
-    original_language: str | None = None
     subjects: list[str] = Field(default_factory=list)
     description: str | None = None
 

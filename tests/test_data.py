@@ -130,15 +130,6 @@ def test_metadata_rejects_unknown_fields():
         BookMetadata(authors="Ken Mogi")
 
 
-def test_metadata_rejects_negative_series_index():
-    with pytest.raises(ValidationError):
-        BookMetadata(series_index=-1)
-
-
-def test_metadata_accepts_fractional_series_index():
-    assert BookMetadata(series_index=2.5).series_index == 2.5
-
-
 def test_metadata_authors_and_translators_are_views_in_order():
     first = Person(name="Anne-Hélène Clair")
     translator = Person(name="Jan Kowalski", role=Role.TRANSLATOR)
