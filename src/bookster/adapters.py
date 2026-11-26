@@ -14,6 +14,10 @@ from .utils import (
 )
 
 
+class UnsupportedBookFormatError(ValueError):
+    pass
+
+
 class BookAdapter(ABC):
     @final
     def load_book(self, path: Path) -> Book:
@@ -104,3 +108,13 @@ class PDFAdapter(BookAdapter):
         book = pymupdf.open(path)
 
         return [" ".join(page.get_text().split()) for page in book[:5]]
+
+
+ADAPTERS: dict[str, type[BookAdapter]] = {".epub": EPUBAdapter, ".pdf": PDFAdapter}
+
+
+def get_adapter(path: Path) -> BookAdapter:
+    try:
+        return ADAPTERS[path.suffix.lower()]
+    except KeyError:
+        raise UnsupportedBookFormatError(f"Unsupported book format: {path.suffix!r}")
