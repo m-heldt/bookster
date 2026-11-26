@@ -4,7 +4,14 @@ from pathlib import Path
 from .data import Book, BookMetadata, Person
 from epublib import EPUB
 import pikepdf
-from .utils import get_metadata_values, get_isbn
+import pymupdf
+from .utils import (
+    get_metadata_values,
+    get_isbn,
+    get_pdf_excerpt,
+    get_page_intervals,
+    next_page_in_interval,
+)
 
 
 class BookAdapter(ABC):
@@ -18,6 +25,9 @@ class BookAdapter(ABC):
 
     @abstractmethod
     def write_metadata(self, path: Path, metadata: BookMetadata) -> None: ...
+
+    @abstractmethod
+    def get_excerpts(self, path: Path) -> list[str]: ...
 
 
 class EPUBAdapter(BookAdapter):
@@ -73,3 +83,15 @@ class PDFAdapter(BookAdapter):
 
     @override
     def write_metadata(self, path: Path, metadata: BookMetadata) -> None: ...
+
+    @override
+    def get_excerpts(self, path: Path, min_word_count=300) -> list[str]:
+        book = pymupdf.open(path)
+        page_count = book.page_count
+        intervals = get_page_intervals(page_count)
+
+        excerpts = []
+        for i in intervals:
+            excerpts.append(get_pdf_excerpt(book, **i, min_word_count=min_word_count))
+
+        return excerpts
