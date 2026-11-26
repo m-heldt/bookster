@@ -6,6 +6,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, Self, Annotated
 import hashlib
+from .isbn import parse_isbn
 
 from pydantic import (
     BaseModel,
@@ -68,7 +69,6 @@ class Person(BaseModel):
 _OPTIONAL_STR_FIELDS = (
     "title",
     "publisher",
-    "isbn",
     "description",
 )
 
@@ -89,6 +89,15 @@ class BookMetadata(BaseModel):
     subjects: list[str] = Field(default_factory=list)
     description: str | None = None
 
+    @field_validator("isbn", mode="before")
+    @classmethod
+    def _parse_isbn(cls, value: Any):
+        if isinstance(value, int):
+            value = str(value)
+        if isinstance(value, str) and not value.strip():
+            return None
+        return parse_isbn(value)
+    
     @field_validator(*_OPTIONAL_STR_FIELDS, mode="before")
     @classmethod
     def _blank_to_none(cls, value: Any) -> Any:
