@@ -29,6 +29,9 @@ class BookAdapter(ABC):
     @abstractmethod
     def get_excerpts(self, path: Path) -> list[str]: ...
 
+    @abstractmethod
+    def get_front_matter(): ...
+
 
 class EPUBAdapter(BookAdapter):
     @override
@@ -95,3 +98,9 @@ class PDFAdapter(BookAdapter):
             excerpts.append(get_pdf_excerpt(book, **i, min_word_count=min_word_count))
 
         return excerpts
+
+    @override
+    def get_front_matter(self, path: Path) -> list[str]:
+        book = pymupdf.open(path)
+
+        return [" ".join(page.get_text().split()) for page in book[:5]]
