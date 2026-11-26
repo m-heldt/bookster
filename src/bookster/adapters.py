@@ -115,6 +115,6 @@ ADAPTERS: dict[str, type[BookAdapter]] = {".epub": EPUBAdapter, ".pdf": PDFAdapt
 
 def get_adapter(path: Path) -> BookAdapter:
     try:
-        return ADAPTERS[path.suffix.lower()]
+        return ADAPTERS[path.suffix.lower()]()
     except KeyError:
         raise UnsupportedBookFormatError(f"Unsupported book format: {path.suffix!r}")

@@ -96,6 +96,8 @@ class BookMetadata(BaseModel):
             value = str(value)
         if isinstance(value, str) and not value.strip():
             return None
+        if value is None:
+            return None
         return parse_isbn(value)
     
     @field_validator(*_OPTIONAL_STR_FIELDS, mode="before")
